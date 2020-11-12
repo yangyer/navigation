@@ -1,17 +1,61 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
+import React from 'react'
+import { render, unmountComponentAtNode } from 'react-dom'
+import { BrowserRouter } from 'react-router-dom'
+import App from './App'
+import { createMicroFERegistration } from 'avail-microfe-base'
 
-ReactDOM.render(
-  <React.StrictMode>
-    <App />
-  </React.StrictMode>,
-  document.getElementById('root')
-);
-
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
-reportWebVitals();
+const pubSub = () => {
+    const subscribers = {}
+  
+  function publish(eventName, data) {
+    if (!Array.isArray(subscribers[eventName])) {
+      return
+    }
+    subscribers[eventName].forEach((callback) => {
+      callback(data)
+    })
+  }
+  
+  function subscribe(eventName, callback) {
+    if (!Array.isArray(subscribers[eventName])) {
+      subscribers[eventName] = []
+    }
+    subscribers[eventName].push(callback)
+  }
+  
+  return {
+    publish,
+    subscribe,
+  }
+}
+createMicroFERegistration({
+    id: 'navigation',
+    init: (state, containerId, options) => {
+        const { history } = options
+        const listenerPubSub = pubSub()
+        listenerPubSub.subscribe('listener', (msg) => console.log('msg', msg))
+        render(
+            <BrowserRouter>
+                <App history={history} onNavClick={(msg => {
+                    listenerPubSub.publish('listener', {
+                        type: 'NAVIGATION',
+                        payload: msg
+                    })
+                })} />
+            </BrowserRouter>,
+            document.getElementById(containerId)
+        )
+        return {
+            registerLayer: (layer) => {
+                listenerPubSub.subscribe('listener', (msg) => {
+                    layer.emitter(msg)
+                })
+                return Promise.resolve()
+            }
+        }
+    },
+    unmount: (containerId) => {
+        unmountComponentAtNode(document.getElementById(containerId))
+        return Promise.resolve()
+    }
+})
