@@ -7,11 +7,10 @@ import { createMicrofrontendRegistration } from 'avail-microfe-base'
 createMicrofrontendRegistration({
     id: 'navigation',
     init: (containerId, options) => {
-        const { history, publish } = options
-        let counter = 0
+        const { routes, history, publish } = options
         render(
           <BrowserRouter>
-              <App history={history} onNavClick={(msg) => publish('navigation', `${msg}${counter++}`)} />
+              <App history={history} routes={routes} onNavClick={(route) => publish('navigation', route)} />
           </BrowserRouter>,
           document.getElementById(containerId)
       )

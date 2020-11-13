@@ -1,10 +1,19 @@
 import './App.css';
 
 const App = ({
+  routes,
   onNavClick
 }) => {
   return (
-    <button onClick={() => onNavClick('from nav bar')}>click me</button>
+    <div>
+      <h1>Navigation</h1>
+      <div>
+        {routes && routes
+          .map(r => (
+            <button onClick={() => onNavClick(r)}>{r.displayText}</button>
+          ))}
+      </div>
+    </div>
   )
 }
 
